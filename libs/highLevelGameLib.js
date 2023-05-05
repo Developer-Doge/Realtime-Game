@@ -1,7 +1,6 @@
 import { get, ref, set } from "firebase/database";
 import { useRecoilState } from "recoil";
 import { isInGame } from "../global/recoilState";
-import { checkGameExists, createGame } from "./gameLib";
 import { database } from "./realtime";
 
 
@@ -30,29 +29,6 @@ export const joinGame = (gameId, playerName) => {
     console.error(error);
   });
 }
-
-export const hostGame = async () => {
-  // Generate a random 6 digit number
-  let gameId = Math.floor(100000 + Math.random() * 900000);
-
-  // Check if game Id already exists
-  const exists = await checkGameExists(gameId);
-
-  // If game Id exists, generate a new one
-  while (exists) {
-    gameId = Math.floor(100000 + Math.random() * 900000);
-    exists = await checkGameExists(gameId);
-  }
-
-  // Create the game with the new game Id
-  await createGame(gameId);
-
-  console.log(JSON.stringify(gameId));
-
-  // Return the game Id
-  return gameId;
-};
-
 
 export const updateState = (gameId, state) => {
   const dbRef = ref(database, `games/${gameId}/state`);
