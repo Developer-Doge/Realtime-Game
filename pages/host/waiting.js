@@ -9,6 +9,7 @@ import HostPlayerBubble from "../../components/HostPlayer";
 import { useRouter } from "next/router";
 
 export const getServerSideProps = async (context) => {
+
   const hostName = context.query.hostName || '';
 
   // Generate a random 6 digit number
