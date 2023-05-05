@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { fetchGame, windowClose } from "../../libs/gameLib";
+import { fetchGame, windowClose, checkGameExists, createGame } from "../../libs/gameLib";
 import { hostGame, updateState } from "../../libs/highLevelGameLib";
 import { BsFillPersonFill } from "react-icons/bs";
 import { get, onValue } from "firebase/database";
@@ -9,7 +9,8 @@ import HostPlayerBubble from "../../components/HostPlayer";
 import { useRouter } from "next/router";
 
 export const getServerSideProps = async (context) => {
-  const { hostName } = context.query;
+
+  const hostName = context.query.hostName || '';
 
   // Generate a random 6 digit number
   const gameId = Math.floor(100000 + Math.random() * 900000);

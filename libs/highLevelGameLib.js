@@ -1,7 +1,6 @@
 import { get, ref, set } from "firebase/database";
 import { useRecoilState } from "recoil";
 import { isInGame } from "../global/recoilState";
-import { checkGameExists, createGame } from "./gameLib";
 import { database } from "./realtime";
 
 
