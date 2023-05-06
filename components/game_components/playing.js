@@ -30,7 +30,7 @@ export default function GameState_Playing({ game, player }) {
         <p>Build your amazing game from here! :)</p>
 
         <ul className="menu bg-base-200 w-100 p-2 rounded-box">
-          <p className="p-3">Here's some debug data if you want it:</p>
+          <p className="p-3">Here&apos;s some debug data if you want it:</p>
           <li>
             <a>GameId: {player.gameId}</a>
           </li>
