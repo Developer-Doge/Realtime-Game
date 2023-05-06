@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { fetchGame, windowClose, checkGameExists, createGame } from "../../libs/gameLib";
-import { hostGame, updateState } from "../../libs/highLevelGameLib";
+import {
+  fetchGame,
+  windowClose,
+  checkGameExists,
+  createGame,
+} from "../../libs/gameLib";
+import {
+  hostGame,
+  updateState,
+  readGameState,
+  readScores,
+} from "../../libs/highLevelGameLib";
 import { BsFillPersonFill } from "react-icons/bs";
 import { get, onValue } from "firebase/database";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
@@ -9,8 +19,7 @@ import HostPlayerBubble from "../../components/HostPlayer";
 import { useRouter } from "next/router";
 
 export const getServerSideProps = async (context) => {
-
-  const hostName = context.query.hostName || '';
+  const hostName = context.query.hostName || "";
 
   // Generate a random 6 digit number
   const gameId = Math.floor(100000 + Math.random() * 900000);
@@ -24,7 +33,7 @@ export const getServerSideProps = async (context) => {
     exists = await checkGameExists(newGameId);
   }
 
-  // Create the game with the new game Id
+  // the game with the new game Id
   await createGame(gameId);
 
   console.log(gameId);
@@ -37,14 +46,16 @@ export const getServerSideProps = async (context) => {
   };
 };
 
-
 export default function HostWaiting({ gameId }) {
-
   const [game, setGame] = useState(null);
-  const [players, setPlayers] = useState([])
-  
+  const [players, setPlayers] = useState([]);
+  const [scores, setScores] = useState([]);
+  const [gameState, setGameState] = useState(null);
+
   // Set the game state to the database reference
-  useEffect(() => {if (gameId !== undefined) setGame(fetchGame(gameId))}, [gameId]);
+  useEffect(() => {
+    if (gameId !== undefined) setGame(fetchGame(gameId));
+  }, [gameId]);
 
   useEffect(() => {
     console.log("Game: " + game);
@@ -53,49 +64,105 @@ export default function HostWaiting({ gameId }) {
         if (snapshot.val()) {
           const data = snapshot.val().players;
 
-          console.log(data)
-          
-          setPlayers(data)
+          console.log(data);
+
+          setPlayers(data);
         }
-      });      
+      });
     }
   }, [game]);
 
+  useEffect(() => {
+    const fetchScores = async () => {
+      const state = await readGameState(gameId);
+      setGameState(state);
+      if (game && state === "playing") {
+        const intervalId = setInterval(async () => {
+          const scorePromises = players.map((player) =>
+            readScores(gameId, player)
+          );
+          const scores = await Promise.all(scorePromises);
+          const playerScores = players.map((player, index) => ({
+            playerName: player,
+            score: scores[index],
+          }));
+          const sortedScores = playerScores.sort((a, b) => b.score - a.score);
+          setScores(sortedScores);
+        }, 5000);
+        return () => clearInterval(intervalId);
+      }
+    };
+    fetchScores();
+  }, [game, players, gameId]);
+
+  const handleStartClick = () => {
+    console.log(`Start button clicked for game ${gameId}`);
+    updateState(gameId, "playing");
+  };
+
   return (
     <div>
-      {/* Game Bar */ }
+      {/* Game Bar */}
 
       <div className="navbar bg-base-200">
         <div className="navbar-start">
-          <p className="text-2xl">Go to <b>example.com/play</b> and enter the Game ID</p>
+          <p className="text-2xl">
+            Go to <b>example.com/play</b> and enter the Game ID
+          </p>
         </div>
         <div className="navbar-center">
-          <a className="btn btn-ghost normal-case text-5xl" onClick={() => {navigator.clipboard.writeText(gameId); toast.success("Copied to clipboard!")}}>{gameId}</a>
+          <a
+            className="btn btn- normal-case text-5xl"
+            onClick={() => {
+              navigator.clipboard.writeText(gameId);
+              toast.success("Copied to clipboard!");
+            }}
+          >
+            {gameId}
+          </a>
         </div>
         <div className="navbar-end"></div>
       </div>
 
       {/* Start Button */}
-      {/* <div className="flex content-end">
-        <button className="btn btn-primary ">Start</button>
-      </div> */}
-
-      <div className="flex flex-row items-center justify-evenly w-90 m-3">
+      <div className="flex flex-row items-center justify-center w-90 m-3">
         <div className="w-14 h-5 text-center flex flex-row justify-center items-center gap-x-3">
           <p className="text-2xl font-bold">{players ? players.length : 0}</p>
           <BsFillPersonFill className="text-5xl" />
         </div>
-        
-        <p className="text-5xl font-bold">Firebase Template</p>
-        <button className="btn btn-primary" onClick={() => updateState(gameId, "playing")}>Start</button>
 
-      </div>
-
-      <div className="grid grid-cols-8 p-12">
-        {players?.map((player) =>
-          <HostPlayerBubble player={player} pageType="hostWaiting" key={player} />
+        <p className="text-5xl font-bold ml-4">Firebase Template</p>
+        {game && gameState === "waiting" && (
+          <button className="btn btn-primary ml-4" onClick={handleStartClick}>
+            Start
+          </button>
         )}
       </div>
+
+      {game && gameState === "waiting" && (
+        <div className="grid grid-cols-8 p-12">
+          {players?.map((player) => (
+            <HostPlayerBubble
+              player={player}
+              pageType="hostWaiting"
+              key={player}
+            />
+          ))}
+        </div>
+      )}
+
+      {game && gameState === "playing" && (
+        <div className="grid grid-cols-8 p-12">
+          {scores?.map((player) => (
+            <HostPlayerBubble
+              player={player.playerName}
+              score={player.score}
+              pageType="hostPlaying"
+              key={player.playerName}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

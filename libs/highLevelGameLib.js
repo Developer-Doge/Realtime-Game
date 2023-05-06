@@ -67,7 +67,6 @@ export const addScore = (gameId, playerName, score) => {
   });
 }
 
-
 export const updateState = (gameId, state) => {
   const dbRef = ref(database, `games/${gameId}/state`);
   set(dbRef, state); 
