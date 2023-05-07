@@ -133,7 +133,7 @@ export default function HostWaiting({ gameId }) {
   const handleStartClick = () => {
     console.log(`Start button clicked for game ${gameId}`);
     updateState(gameId, "playing");
-    setTimeRemaining(0.1 * 60 * 1000);
+    setTimeRemaining(5 * 60 * 1000);
   };
 
   const handleWinnerClose = async () => {
