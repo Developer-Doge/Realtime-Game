@@ -17,6 +17,7 @@ import { get, onValue } from "firebase/database";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import HostPlayerBubble from "../../components/HostPlayer";
 import { useRouter } from "next/router";
+import Winner from "../../components/winner";
 
 export const getServerSideProps = async (context) => {
   const hostName = context.query.hostName || "";
@@ -51,10 +52,18 @@ export default function HostWaiting({ gameId }) {
   const [players, setPlayers] = useState([]);
   const [scores, setScores] = useState([]);
   const [gameState, setGameState] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(100 * 60 * 1000); // 10 minutes in milliseconds
+  const [showWinner, setShowWinner] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const [winnerScore, setWinnerScore] = useState(null);
+  const [formattedTimeRemaining, setFormattedTimeRemaining] = useState("");
+  const router = useRouter();
 
-  // Set the game state to the database reference
   useEffect(() => {
-    if (gameId !== undefined) setGame(fetchGame(gameId));
+    if (gameId !== undefined) {
+      const gameRef = fetchGame(gameId);
+      setGame(gameRef);
+    }
   }, [gameId]);
 
   useEffect(() => {
@@ -95,10 +104,61 @@ export default function HostWaiting({ gameId }) {
     fetchScores();
   }, [game, players, gameId]);
 
+  useEffect(() => {
+    if (gameState === "playing") {
+      const timerId = setTimeout(() => {
+        setTimeRemaining(0);
+        updateState(gameId, "finished");
+        setShowWinner(true);
+      }, timeRemaining);
+      return () => clearTimeout(timerId);
+    }
+  }, [gameState, timeRemaining, gameId]);
+
+  useEffect(() => {
+    const minutes = Math.floor(timeRemaining / 60000);
+    const seconds = Math.floor((timeRemaining % 60000) / 1000);
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+    setFormattedTimeRemaining(`${formattedMinutes}:${formattedSeconds}`);
+  }, [timeRemaining]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTimeRemaining((prevTimeRemaining) => prevTimeRemaining - 1000);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   const handleStartClick = () => {
     console.log(`Start button clicked for game ${gameId}`);
     updateState(gameId, "playing");
+    setTimeRemaining(0.1 * 60 * 1000);
   };
+
+  const handleWinnerClose = async () => {
+      console.log("handleWinnerClose called");
+      if (!game) return;
+      setShowWinner(false);
+      const scorePromises = players.map((player) => readScores(gameId, player));
+      const scores = await Promise.all(scorePromises);
+      const playerScores = players.map((player, index) => ({
+        playerName: player,
+        score: scores[index],
+      }));
+      const sortedScores = playerScores.sort((a, b) => b.score - a.score);
+      const highestScore = sortedScores[0].score;
+      const winners = sortedScores.filter((player) => player.score === highestScore);
+      const winnerNames = winners.map((winner) => winner.playerName);
+      setWinner(winnerNames.join(", "));
+      setWinnerScore(highestScore); // Set the winner's score
+      setShowWinner(true); // Show the winner
+    setTimeout(() => {
+      router.push("/");
+    }, (5 * 60 * 1000));
+  };
+  
+  
 
   return (
     <div>
@@ -110,14 +170,14 @@ export default function HostWaiting({ gameId }) {
             Go to <b>example.com/play</b> and enter the Game ID
           </p>
         </div>
+
         <div className="navbar-center">
           <a
-            className="btn btn- normal-case text-5xl"
+            className="btn btn-normal-case text-5xl"
             onClick={() => {
               navigator.clipboard.writeText(gameId);
               toast.success("Copied to clipboard!");
-            }}
-          >
+            }}>
             {gameId}
           </a>
         </div>
@@ -131,7 +191,14 @@ export default function HostWaiting({ gameId }) {
           <BsFillPersonFill className="text-5xl" />
         </div>
 
-        <p className="text-5xl font-bold ml-4">Firebase Template</p>
+        {game && gameState === "waiting" && (
+          <p className="text-5xl font-bold ml-4">Jeopardy</p>
+        )}
+
+        {game && gameState === "playing" && (
+          <p className="text-5xl font-bold ml-4">{formattedTimeRemaining}</p>
+        )}
+
         {game && gameState === "waiting" && (
           <button className="btn btn-primary ml-4" onClick={handleStartClick}>
             Start
@@ -162,6 +229,13 @@ export default function HostWaiting({ gameId }) {
             />
           ))}
         </div>
+      )}
+
+      {handleWinnerClose && showWinner && (
+        <Winner
+          winner={winner}
+          score={winnerScore}
+        />
       )}
     </div>
   );

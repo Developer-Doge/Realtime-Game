@@ -8,6 +8,7 @@ import { database } from "../../libs/realtime";
 import GameState_Playing from "../../components/game_components/playing";
 import GameState_Waiting from "../../components/game_components/waiting";
 import GameState_Invalid from "../../components/game_components/invalid";
+import GameState_Finished from "../../components/winner";
 
 export default function GameDirectorPage() {
   const [isInGameState, _] = useRecoilState(isInGame);
@@ -25,21 +26,27 @@ export default function GameDirectorPage() {
     if (player) {
       const dbRef = ref(database, `games/${player.gameId}/state`);
       onValue(dbRef, (snapshot) => {
-        setGameState(snapshot.val());
+        const gameState = snapshot.val();
+        if (gameState === "waiting" || gameState === "playing" || gameState === "finished") {
+          setGameState(gameState);
+        } else {
+          console.error("Invalid game state:", gameState);
+        }
       });
 
       setGameRef(ref(database, `games/${player.gameId}`));
     }
-  
   }, []);
 
-  console.log("GameState: " + gameState)
+  console.log("GameState: " + gameState);
 
   if (gameState == "waiting") {
-    return <GameState_Waiting game={gameRef} player={player} />
+    return <GameState_Waiting game={gameRef} player={player} />;
   } else if (gameState == "playing") {
-    return <GameState_Playing game={gameRef} player={player} />
+    return <GameState_Playing game={gameRef} player={player} />;
+  } else if (gameState == "finished") {
+    return <GameState_Finished game={gameRef} player={player} />;
   } else {
-    return <GameState_Invalid game={gameRef} player={player} />
+    return <GameState_Invalid game={gameRef} player={player} />;
   }
 }

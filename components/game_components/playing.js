@@ -1,10 +1,13 @@
-import { readGameState, readScores, addScore } from "../../libs/highLevelGameLib";
+import {
+  readGameState,
+  readScores,
+  addScore,
+} from "../../libs/highLevelGameLib";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getRandomCategories, getCategoryClues } from "../../libs/jeopardyApi";
 const NUM_CATEGORIES = 5;
 const NUM_CLUES_PER_CATEGORY = 5;
-
 
 export default function JeopardyGame({ game, player }) {
   const [gameState, setGameState] = useState();
@@ -19,31 +22,27 @@ export default function JeopardyGame({ game, player }) {
   const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
-    readGameState(player.gameId).then((state) => {
-      setGameState(state);
-    });
-    
-    // Fetch 5 random categories and 5 clues per category when the component mounts
-    async function fetchData() {
+    readGameState(player.gameId).then(setGameState);
+
+    const fetchData = async () => {
       const categories = await getRandomCategories(NUM_CATEGORIES);
-      const cluePromises = categories.map((category) =>
-        getCategoryClues(category.id, NUM_CLUES_PER_CATEGORY)
+      const cluePromises = categories.map(({ id }) =>
+        getCategoryClues(id, NUM_CLUES_PER_CATEGORY)
       );
       const clues = await Promise.all(cluePromises);
       setCategories(categories);
       setClues(clues);
-    }
+    };
     fetchData();
     return () => {
       readScores(player.gameId, player.username, false);
     };
   }, [game, player.gameId]);
 
-  // Render the category headers and clue values for the Jeopardy board
-  function renderCategories() {
-    return categories.map((category, i) => {
+  const renderCategories = () =>
+    categories.map((category, i) => {
       const categoryClues = clues[i]
-        .filter((clue) => !!clue.value)
+        .filter(({ value }) => !!value)
         .sort((a, b) => a.value - b.value)
         .slice(0, NUM_CLUES_PER_CATEGORY);
       return (
@@ -59,8 +58,7 @@ export default function JeopardyGame({ game, player }) {
                     : "hover:bg-yellow-400"
                 }`}
                 onClick={() => handleClueClick(clue)}
-                disabled={disabledClues.includes(clue.id)}
-              >
+                disabled={disabledClues.includes(clue.id)}>
                 ${clue.value}
               </button>
             ))}
@@ -68,17 +66,16 @@ export default function JeopardyGame({ game, player }) {
         </div>
       );
     });
-  }
 
-  function handleClueClick(clue) {
+  const handleClueClick = (clue) => {
     setCurrentClue(clue);
-  }
+  };
 
-  function handleGuessChange(e) {
-    setGuess(e.target.value);
-  }
+  const handleGuessChange = ({ target: { value } }) => {
+    setGuess(value);
+  };
 
-  function handleGuessSubmit(e) {
+  const handleGuessSubmit = (e) => {
     e.preventDefault();
     if (guess.toLowerCase() === currentClue.answer.toLowerCase()) {
       setCorrectGuesses(correctGuesses + 1);
@@ -100,7 +97,7 @@ export default function JeopardyGame({ game, player }) {
         addScore(player.gameId, player.username, -currentClue.value);
       }, 3000);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto">

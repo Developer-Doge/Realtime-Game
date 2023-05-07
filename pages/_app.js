@@ -1,6 +1,6 @@
-import { Toaster } from 'react-hot-toast'
-import { RecoilRoot } from 'recoil'
-import '../styles/globals.css'
+import { Toaster } from "react-hot-toast";
+import { RecoilRoot } from "recoil";
+import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -8,7 +8,7 @@ function MyApp({ Component, pageProps }) {
       <Toaster />
       <Component {...pageProps} />
     </RecoilRoot>
-  )
+  );
 }
 
-export default MyApp
+export default MyApp;

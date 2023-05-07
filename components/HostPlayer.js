@@ -19,5 +19,4 @@ export default function HostPlayerBubble({ player, score, pageType }) {
       </div>
     );
   }
-  
 }
