@@ -167,7 +167,7 @@ export default function HostWaiting({ gameId }) {
       <div className="navbar bg-base-200">
         <div className="navbar-start">
           <p className="text-2xl">
-            Go to <b>example.com/play</b> and enter the Game ID
+            Go to <b>quizshowdown.vercel.app</b> and enter the Game ID
           </p>
         </div>
 
