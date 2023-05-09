@@ -12,10 +12,14 @@
  - [x] Backend API
  - [x] Host Game
  - [x] Client States
- - [ ] Host States
- - [ ] Example Gamemodes
+ - [x] Host States (partial)
+ - [x] Example Gamemodes (see note)
 
 # How to Configure
 
  1. Update the `realtime.js` file to include your firebase configuration
  2. **OPTIONAL:** Configure the `highLevelGameLib.js` file to suit your needs for your game
+
+## Note on Gamemodes
+ - Only one gamemode (jeopardy) and it is buggy and needs to be optimized
+
