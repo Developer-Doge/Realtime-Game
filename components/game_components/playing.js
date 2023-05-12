@@ -24,16 +24,21 @@ export default function JeopardyGame({ game, player }) {
   useEffect(() => {
     readGameState(player.gameId).then(setGameState);
 
-    const fetchData = async () => {
-      const categories = await getRandomCategories(NUM_CATEGORIES);
-      const cluePromises = categories.map(({ id }) =>
-        getCategoryClues(id, NUM_CLUES_PER_CATEGORY)
-      );
-      const clues = await Promise.all(cluePromises);
-      setCategories(categories);
-      setClues(clues);
-    };
+    async function fetchData() {
+      try {
+        const categories = await getRandomCategories(NUM_CATEGORIES);
+        const cluePromises = categories.map(({ id }) =>
+          getCategoryClues(id, NUM_CLUES_PER_CATEGORY)
+        );
+        const clues = await Promise.all(cluePromises);
+        setCategories(categories);
+        setClues(clues);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
     fetchData();
+
     return () => {
       readScores(player.gameId, player.username, false);
     };
@@ -45,27 +50,28 @@ export default function JeopardyGame({ game, player }) {
         .filter(({ value }) => !!value)
         .sort((a, b) => a.value - b.value)
         .slice(0, NUM_CLUES_PER_CATEGORY);
-      return (
-        <div className="p-2" key={i}>
-          <h3 className="text-center text-xl">{category.title}</h3>
-          <div className="flex flex-col bg-gray-200">
-            {categoryClues.map((clue, j) => (
-              <button
-                key={j}
-                className={`py-2 px-4 flex-1 text-center ${
-                  disabledClues.includes(clue.id)
-                    ? "bg-gray-400"
-                    : "hover:bg-yellow-400"
-                }`}
-                onClick={() => handleClueClick(clue)}
-                disabled={disabledClues.includes(clue.id)}>
-                ${clue.value}
-              </button>
-            ))}
+        return (
+          <div key={i} className="card shadow-lg mb-6 p-4">
+            <h3 className="text-center text-2xl mb-4">{category.title}</h3>
+            <div className="flex flex-col space-y-2">
+              {categoryClues.map((clue, j) => (
+                <button
+                  key={j}
+                  className={`btn btn-md ${
+                    disabledClues.includes(clue.id)
+                      ? "btn-secondary"
+                      : "btn-primary hover:bg-yellow-500"
+                  }`}
+                  onClick={() => handleClueClick(clue)}
+                  disabled={disabledClues.includes(clue.id)}
+                >
+                  ${clue.value}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      );
-    });
+        );
+      });
 
   const handleClueClick = (clue) => {
     setCurrentClue(clue);
@@ -105,15 +111,15 @@ export default function JeopardyGame({ game, player }) {
       {currentClue ? (
         <div className="text-center">
           <h2 className="text-2xl mb-4">{currentClue.question}</h2>
-          <form onSubmit={handleGuessSubmit}>
+          <form onSubmit={handleGuessSubmit} className="form-control w-80 mx-auto">
             <input
-              className="border border-gray-400 p-2 w-80"
+              className="input input-bordered w-full"
               type="text"
               placeholder="Your answer"
               value={guess}
               onChange={handleGuessChange}
             />
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">
+            <button className="btn btn-primary mt-4 w-full">
               Submit
             </button>
           </form>
