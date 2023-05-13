@@ -49,8 +49,14 @@ export default function JeopardyGame({ game, player }) {
     categories.map((category, i) => {
       const categoryClues = clues[i]
         .filter(({ value }) => !!value)
+        .reduce((acc, clue) => {
+          if (!acc.some((existingClue) => existingClue.value === clue.value)) {
+            acc.push(clue);
+          }
+          return acc;
+        }, [])
         .sort((a, b) => a.value - b.value)
-        .slice(0, NUM_CLUES_PER_CATEGORY);
+        .slice(0, 5);
       return (
         <div key={i} className="card shadow-lg mb-6 p-4">
           <h3 className="text-center text-2xl mb-4">{category.title}</h3>
