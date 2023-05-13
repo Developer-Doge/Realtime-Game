@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {
   fetchGame,
-  windowClose,
   checkGameExists,
   createGame,
 } from "../../libs/gameLib";
 import {
-  hostGame,
   updateState,
   readGameState,
   readScores,
@@ -137,29 +135,35 @@ export default function HostWaiting({ gameId }) {
   };
 
   const handleWinnerClose = async () => {
-      console.log("handleWinnerClose called");
-      if (!game) return;
-      setShowWinner(false);
-      const scorePromises = players.map((player) => readScores(gameId, player));
-      const scores = await Promise.all(scorePromises);
-      const playerScores = players.map((player, index) => ({
-        playerName: player,
-        score: scores[index],
-      }));
-      const sortedScores = playerScores.sort((a, b) => b.score - a.score);
-      const highestScore = sortedScores[0].score;
-      const winners = sortedScores.filter((player) => player.score === highestScore);
-      const winnerNames = winners.map((winner) => winner.playerName);
-      setWinner(winnerNames.join(", "));
-      setWinnerScore(highestScore); // Set the winner's score
-      setShowWinner(true); // Show the winner
+    console.log("handleWinnerClose called");
+    if (!game) return;
+    setShowWinner(false);
+  
+    const scorePromises = players.map((player) => readScores(gameId, player));
+    const scores = await Promise.all(scorePromises);
+  
+    const playerScores = players.map((player, index) => ({
+      playerName: player,
+      score: scores[index],
+    }));
+  
+    const sortedScores = playerScores.sort((a, b) => b.score - a.score);
+    const highestScore = sortedScores[0].score;
+    const winners = sortedScores.filter((player) => player.score === highestScore);
+    const winnerNames = winners.map((winner) => winner.playerName);
+  
+    // If multiple players have the highest score, display "Tie" as the winner's name
+    const winnerName = winnerNames.length > 1 ? "Tie" : winnerNames[0];
+  
+    setWinner(winnerName);
+    setWinnerScore(highestScore);
+    setShowWinner(true);
+  
     setTimeout(() => {
       router.push("/");
-    }, (5 * 60 * 1000));
-  };
+    }, 5 * 60 * 1000);
+  };  
   
-  
-
   return (
     <div>
       {/* Game Bar */}

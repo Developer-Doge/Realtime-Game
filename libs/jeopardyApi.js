@@ -2,12 +2,12 @@ import axios from "axios";
 
 const API_BASE_URL = "https://jservice.io/api";
 
-export async function getRandomCategories(numCategories = 6) {
+export async function getRandomCategories(numCategories = 6, gameId) {
   try {
     const response = await axios.get(`${API_BASE_URL}/categories`, {
       params: {
         count: numCategories,
-        offset: Math.floor(Math.random() * 10000),
+        offset: Math.trunc(gameId / 100),
       },
     });
     const categories = response.data;

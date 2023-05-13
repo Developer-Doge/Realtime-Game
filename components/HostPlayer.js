@@ -1,21 +1,17 @@
 import React from "react";
 
 export default function HostPlayerBubble({ player, score, pageType }) {
-  if (pageType == "hostWaiting") {
+  if (pageType === "hostWaiting") {
     return (
-      <div class="card w-40 bg-neutral text-neutral-content">
-        <div class="card-body items-center text-center">
-          <p>{player}</p>
-        </div>
+      <div className="card w-40 p-4 flex items-center justify-center bg-base-200 text-base-content">
+        <p className="text-lg font-bold">{player}</p>
       </div>
     );
   } else {
     return (
-      <div class="card w-40 bg-neutral text-neutral-content">
-        <div class="card-body items-center text-center">
-          <p>{player}</p>
-          <p>Score: {score}</p>
-        </div>
+      <div className="card w-40 p-4 flex flex-col items-center justify-center bg-base-200 text-base-content">
+        <p className="text-lg font-bold">{player}</p>
+        <p className="text-sm">Score: {score}</p>
       </div>
     );
   }
