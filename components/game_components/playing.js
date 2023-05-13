@@ -56,7 +56,7 @@ export default function JeopardyGame({ game, player }) {
           return acc;
         }, [])
         .sort((a, b) => a.value - b.value)
-        .slice(0, 5);
+        .slice(0, NUM_CLUES_PER_CATEGORY);
       return (
         <div key={i} className="card shadow-lg mb-6 p-4">
           <h3 className="text-center text-2xl mb-4">{category.title}</h3>
